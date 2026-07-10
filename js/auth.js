@@ -36,7 +36,7 @@ const auth = {
     if (!db.init()) throw new Error("Supabase ayarları eksik.");
     const email = this.emailFromUsername(username);
     if (!email) {
-      throw new Error("Geçersiz kullanıcı adı. emirhan, erkan veya ismail kullanın.");
+      throw new Error("Kullanıcı adı veya şifre hatalı.");
     }
     const { data, error } = await db.client.auth.signInWithPassword({
       email,
@@ -58,10 +58,17 @@ const auth = {
       const next = encodeURIComponent(
         window.location.pathname.split("/").pop() + window.location.search,
       );
-      window.location.href = `login.html?next=${next}`;
+      window.location.replace(`login.html?next=${next}`);
       return null;
     }
+    document.documentElement.classList.remove("auth-pending");
+    document.documentElement.classList.add("auth-ready");
     return session;
+  },
+
+  reveal() {
+    document.documentElement.classList.remove("auth-pending");
+    document.documentElement.classList.add("auth-ready");
   },
 
   async renderHeaderUser() {

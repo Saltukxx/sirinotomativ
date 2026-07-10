@@ -12,6 +12,15 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/styles.css" />
+    <style>
+      html.auth-pending body {
+        visibility: hidden;
+      }
+      html.auth-ready body {
+        visibility: visible;
+      }
+    </style>
+    <script src="js/auth-gate.js"></script>
   </head>
   <body class="login-body">
     <main class="login-shell">
@@ -27,7 +36,7 @@
               name="username"
               required
               autocomplete="username"
-              placeholder="emirhan / erkan / ismail"
+              placeholder="Kullanıcı adı"
             />
           </div>
           <div class="field">
@@ -38,7 +47,7 @@
               type="password"
               required
               autocomplete="current-password"
-              placeholder="Şifreniz"
+              placeholder="Şifre"
             />
           </div>
 
@@ -48,8 +57,6 @@
             Giriş yap
           </button>
         </form>
-
-        <p class="login-hint">Kullanıcılar: emirhan, erkan, ismail</p>
       </section>
     </main>
 

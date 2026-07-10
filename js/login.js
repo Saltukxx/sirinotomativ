@@ -4,12 +4,13 @@
     if (session) {
       const params = new URLSearchParams(window.location.search);
       const next = params.get("next") || "index.html";
-      window.location.href = next.includes("login.html") ? "index.html" : next;
+      window.location.replace(next.includes("login.html") ? "index.html" : next);
       return;
     }
   } catch (_) {
     // stay on login
   }
+  auth.reveal();
 })();
 
 qs("login-form").addEventListener("submit", async (e) => {
@@ -28,12 +29,13 @@ qs("login-form").addEventListener("submit", async (e) => {
     await auth.login(username, password);
     const params = new URLSearchParams(window.location.search);
     const next = params.get("next") || "index.html";
-    window.location.href = next.includes("login.html") ? "index.html" : next;
+    window.location.replace(next.includes("login.html") ? "index.html" : next);
   } catch (err) {
+    const msg = String(err.message || "");
     errorEl.textContent =
-      err.message === "Invalid login credentials"
+      msg === "Invalid login credentials" || /invalid/i.test(msg)
         ? "Kullanıcı adı veya şifre hatalı."
-        : err.message || "Giriş başarısız.";
+        : msg || "Giriş başarısız.";
     show(errorEl);
     btn.disabled = false;
     btn.textContent = "Giriş yap";

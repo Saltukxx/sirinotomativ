@@ -12,6 +12,15 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/styles.css" />
+    <style>
+      html.auth-pending body {
+        visibility: hidden;
+      }
+      html.auth-ready body {
+        visibility: visible;
+      }
+    </style>
+    <script src="js/auth-gate.js"></script>
   </head>
   <body>
     <header class="header">

@@ -28,10 +28,7 @@ Kar marjı = Net kar / Satış fiyatı
 
 ## Giriş
 
-Kullanıcı adları: `emirhan`, `erkan`, `ismail`  
-İlk şifre (hepsi): `Sirin2026!`
-
-Giriş sayfası: `login.html`
+`login.html` üzerinden kullanıcı adı ve şifre ile giriş yapılır.
 
 ## Çalıştırma
 
