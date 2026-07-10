@@ -1,8 +1,15 @@
 function createClient() {
-  if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY || window.SUPABASE_ANON_KEY.includes("REPLACE")) {
+  if (
+    !window.SUPABASE_URL ||
+    !window.SUPABASE_ANON_KEY ||
+    window.SUPABASE_ANON_KEY.includes("REPLACE")
+  ) {
     return null;
   }
-  return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  return window.supabase.createClient(
+    window.SUPABASE_URL,
+    window.SUPABASE_ANON_KEY,
+  );
 }
 
 const db = {
@@ -81,5 +88,25 @@ const db = {
   async deleteExpense(id) {
     const { error } = await this.client.from("expenses").delete().eq("id", id);
     if (error) throw error;
+  },
+
+  async uploadFile(bucket, path, file) {
+    const { error } = await this.client.storage.from(bucket).upload(path, file, {
+      upsert: true,
+      contentType: file.type || undefined,
+    });
+    if (error) throw error;
+    const { data } = this.client.storage.from(bucket).getPublicUrl(path);
+    return data.publicUrl;
+  },
+
+  async uploadVehiclePhoto(vehicleId, file) {
+    const path = `${vehicleId}/photo-${Date.now()}.${fileExt(file)}`;
+    return this.uploadFile("vehicle-photos", path, file);
+  },
+
+  async uploadExpenseReceipt(vehicleId, file) {
+    const path = `${vehicleId}/receipt-${Date.now()}.${fileExt(file)}`;
+    return this.uploadFile("expense-receipts", path, file);
   },
 };

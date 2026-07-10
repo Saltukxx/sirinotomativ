@@ -13,9 +13,25 @@ Sabit HTML / CSS / JS muhasebe uygulaması. Veriler Supabase üzerinde tutulur.
 ## Kar hesabı
 
 ```
-Net kar = Satış fiyatı − (Alış fiyatı + Masraflar)
+Net kar = Satış − (Alış + Masraflar + Komisyon + KDV)
 Kar marjı = Net kar / Satış fiyatı
 ```
+
+## Ek özellikler
+
+- Stok uyarıları (30 / 60 / 90 gün)
+- Araç fotoğrafı (Supabase Storage)
+- Masraf fişi / fatura yükleme
+- Alıcı ve satıcı bilgileri
+- Ödeme tipi (nakit, havale, takas, kart, çek)
+- Komisyon ve KDV
+
+## Giriş
+
+Kullanıcı adları: `emirhan`, `erkan`, `ismail`  
+İlk şifre (hepsi): `Sirin2026!`
+
+Giriş sayfası: `login.html`
 
 ## Çalıştırma
 

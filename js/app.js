@@ -20,7 +20,7 @@ function renderStats(list) {
     <div class="stat">
       <p class="stat-label">Toplam yatırım</p>
       <p class="stat-value">${formatCurrency(stats.totalInvested)}</p>
-      <p class="stat-hint">Alış + masraflar</p>
+      <p class="stat-hint">Alış + masraf + komisyon + KDV</p>
     </div>
     <div class="stat">
       <p class="stat-label">Satış geliri</p>
@@ -35,6 +35,55 @@ function renderStats(list) {
           ? `Ort. marj ${formatPercent(stats.averageMargin)}`
           : "Henüz satış yok"
       }</p>
+    </div>
+  `;
+
+  renderAlerts(stats.stockAlerts);
+}
+
+function renderAlerts(alerts) {
+  const root = qs("alerts");
+  if (!root) return;
+
+  if (!alerts.length) {
+    root.innerHTML = "";
+    hide(root);
+    return;
+  }
+
+  show(root);
+  root.innerHTML = `
+    <div class="alerts-card">
+      <div class="alerts-head">
+        <h2>Stok uyarıları</h2>
+        <p>${alerts.length} araç uzun süredir stokta</p>
+      </div>
+      <ul class="alerts-list">
+        ${alerts
+          .map((v) => {
+            const level = stockAlertLevel(v);
+            const days = daysInStock(v);
+            return `
+              <li>
+                <a class="alert-item alert-${level}" href="arac.html?id=${v.id}">
+                  <div class="alert-item-main">
+                    ${
+                      v.photo_url
+                        ? `<img src="${escapeHtml(v.photo_url)}" alt="" class="alert-thumb" />`
+                        : `<div class="alert-thumb placeholder">Araç</div>`
+                    }
+                    <div>
+                      <strong>${escapeHtml(v.brand)} ${escapeHtml(v.model)}</strong>
+                      <p>${v.year}${v.plate ? ` · ${escapeHtml(v.plate)}` : ""} · ${formatCurrency(v.purchase_price)}</p>
+                    </div>
+                  </div>
+                  <span class="alert-chip alert-chip-${level}">${days} gün · ${stockAlertLabel(level)}</span>
+                </a>
+              </li>
+            `;
+          })
+          .join("")}
+      </ul>
     </div>
   `;
 }
@@ -81,16 +130,29 @@ function renderList(list) {
       <ul class="vehicle-list">
         ${list
           .map((v) => {
+            const level = stockAlertLevel(v);
             const badge =
               v.status === "satildi"
                 ? `<span class="badge badge-sold">Satıldı</span>`
                 : `<span class="badge badge-stock">Stokta</span>`;
+            const stockChip = level
+              ? `<span class="stock-chip stock-chip-${level}">${daysInStock(v)}g</span>`
+              : "";
             return `
               <li class="vehicle-row" data-id="${v.id}">
                 <div class="vehicle-row-top">
-                  <div>
-                    <p class="vehicle-title">${escapeHtml(v.brand)} ${escapeHtml(v.model)}</p>
-                    <p class="vehicle-meta">${v.year}${v.plate ? ` · ${escapeHtml(v.plate)}` : ""}</p>
+                  <div class="vehicle-identity">
+                    ${
+                      v.photo_url
+                        ? `<img class="vehicle-thumb" src="${escapeHtml(v.photo_url)}" alt="" />`
+                        : `<div class="vehicle-thumb placeholder">Araç</div>`
+                    }
+                    <div>
+                      <p class="vehicle-title">${escapeHtml(v.brand)} ${escapeHtml(v.model)} ${stockChip}</p>
+                      <p class="vehicle-meta">${v.year}${v.plate ? ` · ${escapeHtml(v.plate)}` : ""}${
+                        v.seller_name ? ` · Satıcı: ${escapeHtml(v.seller_name)}` : ""
+                      }</p>
+                    </div>
                   </div>
                   ${badge}
                 </div>
@@ -132,9 +194,11 @@ function renderList(list) {
 function applyFilters() {
   const q = query.trim().toLowerCase();
   const filtered = vehicles.filter((v) => {
+    if (filter === "uyari") return Boolean(stockAlertLevel(v));
     if (filter !== "all" && v.status !== filter) return false;
     if (!q) return true;
-    const hay = `${v.brand} ${v.model} ${v.plate} ${v.year}`.toLowerCase();
+    const hay =
+      `${v.brand} ${v.model} ${v.plate} ${v.year} ${v.seller_name} ${v.buyer_name}`.toLowerCase();
     return hay.includes(q);
   });
   renderStats(vehicles);
@@ -147,6 +211,10 @@ async function boot() {
     hide(qs("loading"));
     return;
   }
+
+  const session = await auth.requireAuth();
+  if (!session) return;
+  await auth.renderHeaderUser();
 
   try {
     vehicles = await db.listVehicles();

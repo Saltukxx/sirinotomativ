@@ -21,23 +21,33 @@
           <p class="brand-sub">Araç Muhasebe</p>
         </a>
         <nav class="nav">
+          <span id="user-slot" class="user-slot"></span>
           <a href="index.html" class="btn btn-ghost">Liste</a>
           <a href="yeni.html" class="btn btn-primary">Yeni araç</a>
         </nav>
       </div>
     </header>
 
-    <main class="main" style="max-width: 720px">
+    <main class="main" style="max-width: 760px">
       <a href="index.html" class="back-link">← Portföye dön</a>
       <section>
         <h1 class="page-title">Yeni araç</h1>
         <p class="page-desc">
-          Alış bilgilerini girin. Satış ve masrafları daha sonra ekleyebilirsiniz.
+          Alış, satıcı, ödeme tipi ve fotoğraf bilgilerini girin.
         </p>
       </section>
 
       <form id="vehicle-form" class="panel form-panel">
-        <div class="form-grid two">
+        <div class="photo-upload">
+          <div id="photo-preview" class="photo-preview placeholder">Fotoğraf yok</div>
+          <div class="field" style="flex: 1">
+            <label for="photo">Araç fotoğrafı</label>
+            <input id="photo" name="photo" type="file" accept="image/*" />
+            <p class="field-hint">JPG/PNG, en fazla 5 MB</p>
+          </div>
+        </div>
+
+        <div class="form-grid two" style="margin-top: 1rem">
           <div class="field">
             <label for="brand">Marka</label>
             <input id="brand" name="brand" required placeholder="Örn. Volkswagen" autocomplete="off" />
@@ -56,42 +66,70 @@
           </div>
           <div class="field">
             <label for="purchase_price">Alış fiyatı (₺)</label>
-            <input
-              id="purchase_price"
-              name="purchase_price"
-              type="number"
-              min="1"
-              step="1000"
-              required
-              inputmode="numeric"
-              placeholder="0"
-            />
+            <input id="purchase_price" name="purchase_price" type="number" min="1" step="1000" required inputmode="numeric" />
           </div>
           <div class="field">
             <label for="purchase_date">Alış tarihi</label>
             <input id="purchase_date" name="purchase_date" type="date" required />
+          </div>
+          <div class="field">
+            <label for="purchase_payment_type">Alış ödeme tipi</label>
+            <select id="purchase_payment_type" name="purchase_payment_type"></select>
+          </div>
+          <div class="field">
+            <label for="commission">Komisyon (₺)</label>
+            <input id="commission" name="commission" type="number" min="0" step="100" value="0" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label for="vat_amount">KDV (₺)</label>
+            <input id="vat_amount" name="vat_amount" type="number" min="0" step="100" value="0" inputmode="numeric" />
+          </div>
+        </div>
+
+        <h3 class="form-section-title">Satıcı bilgileri</h3>
+        <div class="form-grid two">
+          <div class="field">
+            <label for="seller_name">Satıcı adı</label>
+            <input id="seller_name" name="seller_name" placeholder="Kimden alındı" />
+          </div>
+          <div class="field">
+            <label for="seller_phone">Satıcı telefon</label>
+            <input id="seller_phone" name="seller_phone" placeholder="05xx xxx xx xx" inputmode="tel" />
           </div>
         </div>
 
         <div class="field" style="margin-top: 1rem">
           <label>Durum</label>
           <div class="status-toggle">
-            <button type="button" id="status-stokta" class="active-stock" data-status="stokta">
-              Stokta
-            </button>
+            <button type="button" id="status-stokta" class="active-stock" data-status="stokta">Stokta</button>
             <button type="button" id="status-satildi" data-status="satildi">Satıldı</button>
           </div>
           <input type="hidden" id="status" name="status" value="stokta" />
         </div>
 
-        <div id="sale-fields" class="form-grid two sale-fields hidden" style="margin-top: 1rem">
-          <div class="field">
-            <label for="sale_price">Satış fiyatı (₺)</label>
-            <input id="sale_price" name="sale_price" type="number" min="0" step="1000" inputmode="numeric" />
-          </div>
-          <div class="field">
-            <label for="sale_date">Satış tarihi</label>
-            <input id="sale_date" name="sale_date" type="date" />
+        <div id="sale-fields" class="sale-fields hidden" style="margin-top: 1rem">
+          <h3 class="form-section-title">Satış bilgileri</h3>
+          <div class="form-grid two">
+            <div class="field">
+              <label for="sale_price">Satış fiyatı (₺)</label>
+              <input id="sale_price" name="sale_price" type="number" min="0" step="1000" inputmode="numeric" />
+            </div>
+            <div class="field">
+              <label for="sale_date">Satış tarihi</label>
+              <input id="sale_date" name="sale_date" type="date" />
+            </div>
+            <div class="field">
+              <label for="sale_payment_type">Satış ödeme tipi</label>
+              <select id="sale_payment_type" name="sale_payment_type"></select>
+            </div>
+            <div class="field">
+              <label for="buyer_name">Alıcı adı</label>
+              <input id="buyer_name" name="buyer_name" placeholder="Kime satıldı" />
+            </div>
+            <div class="field">
+              <label for="buyer_phone">Alıcı telefon</label>
+              <input id="buyer_phone" name="buyer_phone" placeholder="05xx xxx xx xx" inputmode="tel" />
+            </div>
           </div>
         </div>
 
@@ -113,6 +151,7 @@
     <script src="js/config.js"></script>
     <script src="js/db.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/yeni.js"></script>
   </body>
 </html>

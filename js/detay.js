@@ -13,9 +13,9 @@ function expenseOptions(selected = "bakim") {
 function sortedExpenses(expenses) {
   return [...(expenses || [])].sort((a, b) => {
     const da = a.date || "";
-    const db = b.date || "";
-    if (da === db) return (b.created_at || "").localeCompare(a.created_at || "");
-    return db.localeCompare(da);
+    const dbDate = b.date || "";
+    if (da === dbDate) return (b.created_at || "").localeCompare(a.created_at || "");
+    return dbDate.localeCompare(da);
   });
 }
 
@@ -25,6 +25,8 @@ function renderDetail(vehicle) {
   const expenseTotal = totalExpenses(expenses);
   const p = profit(vehicle);
   const m = profitMargin(vehicle);
+  const level = stockAlertLevel(vehicle);
+  const days = daysInStock(vehicle);
 
   let profitBoxClass = "pending";
   let profitLabel = "Bekleyen kar";
@@ -44,19 +46,39 @@ function renderDetail(vehicle) {
     <a href="index.html" class="back-link">← Portföye dön</a>
 
     <section class="detail-header">
-      <div>
-        <p class="section-label">
-          ${vehicle.status === "satildi" ? "Satıldı" : "Stokta"}${
-            vehicle.plate ? ` · ${escapeHtml(vehicle.plate)}` : ""
+      <div class="detail-hero">
+        ${
+          vehicle.photo_url
+            ? `<img class="detail-photo" src="${escapeHtml(vehicle.photo_url)}" alt="${escapeHtml(vehicle.brand)} ${escapeHtml(vehicle.model)}" />`
+            : `<div class="detail-photo placeholder">Fotoğraf yok</div>`
+        }
+        <div>
+          <p class="section-label">
+            ${vehicle.status === "satildi" ? "Satıldı" : "Stokta"}${
+              vehicle.plate ? ` · ${escapeHtml(vehicle.plate)}` : ""
+            }
+          </p>
+          <h1 class="page-title" style="margin-top:0.35rem">
+            ${escapeHtml(vehicle.brand)} ${escapeHtml(vehicle.model)}
+          </h1>
+          <p class="page-desc">
+            ${vehicle.year} model · Alış ${formatDate(vehicle.purchase_date)}
+            ${vehicle.notes ? ` · ${escapeHtml(vehicle.notes)}` : ""}
+          </p>
+          ${
+            level
+              ? `<div class="inline-alert alert-${level}">${days} gündür stokta · ${stockAlertLabel(level)}</div>`
+              : vehicle.status === "stokta"
+                ? `<div class="inline-alert alert-ok">${days} gündür stokta</div>`
+                : ""
           }
-        </p>
-        <h1 class="page-title" style="margin-top:0.35rem">
-          ${escapeHtml(vehicle.brand)} ${escapeHtml(vehicle.model)}
-        </h1>
-        <p class="page-desc">
-          ${vehicle.year} model · Alış ${formatDate(vehicle.purchase_date)}
-          ${vehicle.notes ? ` · ${escapeHtml(vehicle.notes)}` : ""}
-        </p>
+          <div class="photo-actions">
+            <label class="btn btn-outline btn-sm file-btn">
+              ${vehicle.photo_url ? "Fotoğrafı değiştir" : "Fotoğraf yükle"}
+              <input id="detail-photo" type="file" accept="image/*" hidden />
+            </label>
+          </div>
+        </div>
       </div>
       <div class="detail-actions">
         <button type="button" class="btn btn-outline" id="edit-btn">Düzenle</button>
@@ -64,13 +86,37 @@ function renderDetail(vehicle) {
       </div>
     </section>
 
-    <div class="detail-grid">
+    <div class="info-grid">
+      <section class="card">
+        <h2>Taraflar</h2>
+        <div class="party-grid">
+          <div>
+            <p class="section-label">Satıcı (alış)</p>
+            <p class="party-name">${escapeHtml(vehicle.seller_name) || "—"}</p>
+            <p class="party-meta">${escapeHtml(vehicle.seller_phone) || "Telefon yok"}</p>
+            <p class="party-meta">Ödeme: ${PAYMENT_LABELS[vehicle.purchase_payment_type] || "—"}</p>
+          </div>
+          <div>
+            <p class="section-label">Alıcı (satış)</p>
+            <p class="party-name">${escapeHtml(vehicle.buyer_name) || "—"}</p>
+            <p class="party-meta">${escapeHtml(vehicle.buyer_phone) || "Telefon yok"}</p>
+            <p class="party-meta">Ödeme: ${
+              vehicle.sale_payment_type
+                ? PAYMENT_LABELS[vehicle.sale_payment_type]
+                : "—"
+            }</p>
+          </div>
+        </div>
+      </section>
+
       <section class="card">
         <h2>Kar özeti</h2>
-        <p class="card-desc">Kar = Satış − (Alış + Masraflar)</p>
+        <p class="card-desc">Kar = Satış − (Alış + Masraflar + Komisyon + KDV)</p>
         <dl style="margin:1.1rem 0 0">
           <div class="summary-row"><dt>Alış fiyatı</dt><dd>${formatCurrency(vehicle.purchase_price)}</dd></div>
           <div class="summary-row"><dt>Toplam masraf</dt><dd>${formatCurrency(expenseTotal)}</dd></div>
+          <div class="summary-row"><dt>Komisyon</dt><dd>${formatCurrency(commissionAmount(vehicle))}</dd></div>
+          <div class="summary-row"><dt>KDV</dt><dd>${formatCurrency(vatAmount(vehicle))}</dd></div>
           <div class="summary-row"><dt>Toplam maliyet</dt><dd><strong>${formatCurrency(cost)}</strong></dd></div>
           <div class="summary-row"><dt>Satış fiyatı</dt><dd>${
             vehicle.sale_price != null ? formatCurrency(vehicle.sale_price) : "Henüz satılmadı"
@@ -79,11 +125,7 @@ function renderDetail(vehicle) {
         <div class="profit-box ${profitBoxClass}">
           <p class="label">${profitLabel}</p>
           <p class="amount" style="color:${profitColor}">${profitAmount}</p>
-          ${
-            m != null
-              ? `<p class="profit-meta">Satış marjı ${formatPercent(m)}</p>`
-              : ""
-          }
+          ${m != null ? `<p class="profit-meta">Satış marjı ${formatPercent(m)}</p>` : ""}
           ${
             vehicle.status === "satildi" && vehicle.sale_date
               ? `<p class="profit-date">Satış tarihi: ${formatDate(vehicle.sale_date)}</p>`
@@ -91,48 +133,65 @@ function renderDetail(vehicle) {
           }
         </div>
       </section>
+    </div>
 
-      <section class="card" id="expenses-card">
-        <div class="card-head">
-          <div>
-            <h2>Masraflar</h2>
-            <p class="card-desc">Bu araca yapılan tüm masrafları kaydedin</p>
-          </div>
-          <p class="card-total">${formatCurrency(expenseTotal)}</p>
+    <section class="card" id="expenses-card" style="margin-top:1rem">
+      <div class="card-head">
+        <div>
+          <h2>Masraflar</h2>
+          <p class="card-desc">Masraf ve fiş/fatura görseli kaydedin</p>
         </div>
+        <p class="card-total">${formatCurrency(expenseTotal)}</p>
+      </div>
 
-        <form id="expense-form" class="expense-form">
-          <div class="field">
-            <label for="exp-desc">Açıklama</label>
-            <input id="exp-desc" required maxlength="120" placeholder="Örn. Fren balata değişimi" />
-          </div>
-          <div class="field">
-            <label for="exp-cat">Kategori</label>
-            <select id="exp-cat">${expenseOptions()}</select>
-          </div>
-          <div class="field">
-            <label for="exp-amount">Tutar (₺)</label>
-            <input id="exp-amount" type="number" min="1" step="100" required placeholder="0" inputmode="numeric" />
-          </div>
-          <div class="field">
-            <label for="exp-date">Tarih</label>
-            <input id="exp-date" type="date" required value="${todayISO()}" />
-          </div>
-          <button type="submit" class="btn btn-ink expense-submit" id="expense-submit">
-            Masraf kaydet
-          </button>
-        </form>
+      <form id="expense-form" class="expense-form expense-form-rich">
+        <div class="field">
+          <label for="exp-desc">Açıklama</label>
+          <input id="exp-desc" required maxlength="120" placeholder="Örn. Fren balata değişimi" />
+        </div>
+        <div class="field">
+          <label for="exp-cat">Kategori</label>
+          <select id="exp-cat">${expenseOptions()}</select>
+        </div>
+        <div class="field">
+          <label for="exp-amount">Tutar (₺)</label>
+          <input id="exp-amount" type="number" min="1" step="100" required placeholder="0" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label for="exp-date">Tarih</label>
+          <input id="exp-date" type="date" required value="${todayISO()}" />
+        </div>
+        <div class="field">
+          <label for="exp-receipt">Fiş / fatura</label>
+          <input id="exp-receipt" type="file" accept="image/*,application/pdf" />
+        </div>
+        <button type="submit" class="btn btn-ink expense-submit" id="expense-submit">
+          Masraf kaydet
+        </button>
+      </form>
 
-        <div id="expense-feedback" class="alert alert-success hidden" style="margin-bottom:0.85rem"></div>
+      <div id="expense-feedback" class="alert alert-success hidden" style="margin-bottom:0.85rem"></div>
 
-        ${
-          expenses.length === 0
-            ? `<div class="expense-empty">Henüz masraf yok. Yukarıdan ilk masrafı ekleyin.</div>`
-            : `<ul class="expense-list">
-                ${expenses
-                  .map(
-                    (e) => `
-                  <li class="expense-item">
+      ${
+        expenses.length === 0
+          ? `<div class="expense-empty">Henüz masraf yok. Yukarıdan ilk masrafı ekleyin.</div>`
+          : `<ul class="expense-list">
+              ${expenses
+                .map(
+                  (e) => `
+                <li class="expense-item">
+                  <div class="expense-left">
+                    ${
+                      e.receipt_url
+                        ? `<a href="${escapeHtml(e.receipt_url)}" target="_blank" rel="noopener" class="receipt-thumb" title="Fişi aç">
+                            ${
+                              String(e.receipt_url).toLowerCase().includes(".pdf")
+                                ? `<span class="receipt-pdf">PDF</span>`
+                                : `<img src="${escapeHtml(e.receipt_url)}" alt="Fiş" />`
+                            }
+                          </a>`
+                        : `<div class="receipt-thumb placeholder">Fiş yok</div>`
+                    }
                     <div>
                       <h3>${escapeHtml(e.description)}</h3>
                       <p>
@@ -140,20 +199,20 @@ function renderDetail(vehicle) {
                         ${formatDate(e.date)}
                       </p>
                     </div>
-                    <div class="expense-right">
-                      <span class="expense-amount">${formatCurrency(e.amount)}</span>
-                      <button type="button" class="btn btn-danger btn-sm" data-delete-expense="${e.id}">
-                        Sil
-                      </button>
-                    </div>
-                  </li>
-                `,
-                  )
-                  .join("")}
-              </ul>`
-        }
-      </section>
-    </div>
+                  </div>
+                  <div class="expense-right">
+                    <span class="expense-amount">${formatCurrency(e.amount)}</span>
+                    <button type="button" class="btn btn-danger btn-sm" data-delete-expense="${e.id}">
+                      Sil
+                    </button>
+                  </div>
+                </li>
+              `,
+                )
+                .join("")}
+            </ul>`
+      }
+    </section>
 
     <section id="edit-panel" class="panel edit-panel hidden">
       <h2>Aracı düzenle</h2>
@@ -183,6 +242,26 @@ function renderDetail(vehicle) {
           <input id="edit-purchase-date" type="date" value="${vehicle.purchase_date}" required />
         </div>
         <div class="field">
+          <label for="edit-purchase-payment">Alış ödeme tipi</label>
+          <select id="edit-purchase-payment">${paymentOptions(vehicle.purchase_payment_type || "nakit")}</select>
+        </div>
+        <div class="field">
+          <label for="edit-commission">Komisyon (₺)</label>
+          <input id="edit-commission" type="number" min="0" value="${vehicle.commission || 0}" />
+        </div>
+        <div class="field">
+          <label for="edit-vat">KDV (₺)</label>
+          <input id="edit-vat" type="number" min="0" value="${vehicle.vat_amount || 0}" />
+        </div>
+        <div class="field">
+          <label for="edit-seller-name">Satıcı adı</label>
+          <input id="edit-seller-name" value="${escapeHtml(vehicle.seller_name || "")}" />
+        </div>
+        <div class="field">
+          <label for="edit-seller-phone">Satıcı telefon</label>
+          <input id="edit-seller-phone" value="${escapeHtml(vehicle.seller_phone || "")}" />
+        </div>
+        <div class="field">
           <label for="edit-status">Durum</label>
           <select id="edit-status">
             <option value="stokta" ${vehicle.status === "stokta" ? "selected" : ""}>Stokta</option>
@@ -196,6 +275,18 @@ function renderDetail(vehicle) {
         <div class="field">
           <label for="edit-sale-date">Satış tarihi</label>
           <input id="edit-sale-date" type="date" value="${vehicle.sale_date ?? ""}" />
+        </div>
+        <div class="field">
+          <label for="edit-sale-payment">Satış ödeme tipi</label>
+          <select id="edit-sale-payment">${paymentOptions(vehicle.sale_payment_type || "", true)}</select>
+        </div>
+        <div class="field">
+          <label for="edit-buyer-name">Alıcı adı</label>
+          <input id="edit-buyer-name" value="${escapeHtml(vehicle.buyer_name || "")}" />
+        </div>
+        <div class="field">
+          <label for="edit-buyer-phone">Alıcı telefon</label>
+          <input id="edit-buyer-phone" value="${escapeHtml(vehicle.buyer_phone || "")}" />
         </div>
         <div class="field" style="grid-column:1 / -1">
           <label for="edit-notes">Notlar</label>
@@ -230,6 +321,20 @@ function bindDetailEvents(vehicle) {
     }
   });
 
+  qs("detail-photo").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      showToast("Fotoğraf yükleniyor…");
+      const photoUrl = await db.uploadVehiclePhoto(vehicle.id, file);
+      await db.updateVehicle(vehicle.id, { photo_url: photoUrl });
+      showToast("Fotoğraf kaydedildi");
+      await load();
+    } catch (err) {
+      alert(err.message || "Fotoğraf yüklenemedi.");
+    }
+  });
+
   qs("expense-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = qs("expense-submit");
@@ -240,6 +345,7 @@ function bindDetailEvents(vehicle) {
     const amount = Number(qs("exp-amount").value);
     const date = qs("exp-date").value;
     const category = qs("exp-cat").value;
+    const receiptFile = qs("exp-receipt").files?.[0] || null;
 
     if (!description || !(amount > 0) || !date) {
       feedback.className = "alert alert-error";
@@ -252,12 +358,18 @@ function bindDetailEvents(vehicle) {
     btn.textContent = "Kaydediliyor…";
 
     try {
+      let receiptUrl = null;
+      if (receiptFile) {
+        btn.textContent = "Fiş yükleniyor…";
+        receiptUrl = await db.uploadExpenseReceipt(vehicle.id, receiptFile);
+      }
       await db.addExpense({
         vehicle_id: vehicle.id,
         description,
         category,
         amount,
         date,
+        receipt_url: receiptUrl,
       });
       showToast("Masraf kaydedildi");
       await load();
@@ -298,9 +410,18 @@ function bindDetailEvents(vehicle) {
       plate: qs("edit-plate").value.trim().toUpperCase(),
       purchase_price: Number(qs("edit-purchase-price").value),
       purchase_date: qs("edit-purchase-date").value,
+      purchase_payment_type: qs("edit-purchase-payment").value || "nakit",
+      commission: Number(qs("edit-commission").value) || 0,
+      vat_amount: Number(qs("edit-vat").value) || 0,
+      seller_name: qs("edit-seller-name").value.trim(),
+      seller_phone: qs("edit-seller-phone").value.trim(),
       status,
       sale_price: status === "satildi" && saleRaw ? Number(saleRaw) : null,
       sale_date: status === "satildi" ? qs("edit-sale-date").value || null : null,
+      sale_payment_type:
+        status === "satildi" ? qs("edit-sale-payment").value || null : null,
+      buyer_name: status === "satildi" ? qs("edit-buyer-name").value.trim() : "",
+      buyer_phone: status === "satildi" ? qs("edit-buyer-phone").value.trim() : "",
       notes: qs("edit-notes").value.trim(),
     };
 
@@ -335,6 +456,10 @@ async function load() {
     show(qs("error"));
     return;
   }
+
+  const session = await auth.requireAuth();
+  if (!session) return;
+  await auth.renderHeaderUser();
 
   try {
     const vehicle = await db.getVehicle(vehicleId);
