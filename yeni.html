@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#c45c26" />
+    <title>Yeni araç — Şirin Otomotiv</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-inner">
+        <a href="index.html" class="brand">
+          <p class="brand-name">ŞİRİN OTOMOTİV</p>
+          <p class="brand-sub">Araç Muhasebe</p>
+        </a>
+        <nav class="nav">
+          <a href="index.html" class="btn btn-ghost">Liste</a>
+          <a href="yeni.html" class="btn btn-primary">Yeni araç</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main" style="max-width: 720px">
+      <a href="index.html" class="back-link">← Portföye dön</a>
+      <section>
+        <h1 class="page-title">Yeni araç</h1>
+        <p class="page-desc">
+          Alış bilgilerini girin. Satış ve masrafları daha sonra ekleyebilirsiniz.
+        </p>
+      </section>
+
+      <form id="vehicle-form" class="panel form-panel">
+        <div class="form-grid two">
+          <div class="field">
+            <label for="brand">Marka</label>
+            <input id="brand" name="brand" required placeholder="Örn. Volkswagen" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="model">Model</label>
+            <input id="model" name="model" required placeholder="Örn. Golf 1.6 TDI" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="year">Model yılı</label>
+            <input id="year" name="year" type="number" min="1980" max="2030" required inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label for="plate">Plaka</label>
+            <input id="plate" name="plate" placeholder="34 ABC 123" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="purchase_price">Alış fiyatı (₺)</label>
+            <input
+              id="purchase_price"
+              name="purchase_price"
+              type="number"
+              min="1"
+              step="1000"
+              required
+              inputmode="numeric"
+              placeholder="0"
+            />
+          </div>
+          <div class="field">
+            <label for="purchase_date">Alış tarihi</label>
+            <input id="purchase_date" name="purchase_date" type="date" required />
+          </div>
+        </div>
+
+        <div class="field" style="margin-top: 1rem">
+          <label>Durum</label>
+          <div class="status-toggle">
+            <button type="button" id="status-stokta" class="active-stock" data-status="stokta">
+              Stokta
+            </button>
+            <button type="button" id="status-satildi" data-status="satildi">Satıldı</button>
+          </div>
+          <input type="hidden" id="status" name="status" value="stokta" />
+        </div>
+
+        <div id="sale-fields" class="form-grid two sale-fields hidden" style="margin-top: 1rem">
+          <div class="field">
+            <label for="sale_price">Satış fiyatı (₺)</label>
+            <input id="sale_price" name="sale_price" type="number" min="0" step="1000" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label for="sale_date">Satış tarihi</label>
+            <input id="sale_date" name="sale_date" type="date" />
+          </div>
+        </div>
+
+        <div class="field" style="margin-top: 1rem">
+          <label for="notes">Notlar</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Opsiyonel notlar..."></textarea>
+        </div>
+
+        <div id="form-error" class="alert alert-error hidden" style="margin-top: 1rem"></div>
+
+        <div class="form-actions" style="margin-top: 1.15rem">
+          <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Aracı kaydet</button>
+          <a href="index.html" class="btn btn-ghost btn-block">İptal</a>
+        </div>
+      </form>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/yeni.js"></script>
+  </body>
+</html>
