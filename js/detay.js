@@ -155,7 +155,7 @@ function renderDetail(vehicle) {
         </div>
         <div class="field">
           <label for="exp-amount">Tutar (₺)</label>
-          <input id="exp-amount" type="number" min="1" step="100" required placeholder="0" inputmode="numeric" />
+          <input id="exp-amount" type="number" min="1" step="1" required placeholder="0" inputmode="numeric" />
         </div>
         <div class="field">
           <label for="exp-date">Tarih</label>
@@ -235,7 +235,7 @@ function renderDetail(vehicle) {
         </div>
         <div class="field">
           <label for="edit-purchase-price">Alış fiyatı</label>
-          <input id="edit-purchase-price" type="number" value="${vehicle.purchase_price}" required />
+          <input id="edit-purchase-price" type="number" min="1" step="1" value="${vehicle.purchase_price}" required />
         </div>
         <div class="field">
           <label for="edit-purchase-date">Alış tarihi</label>
@@ -247,11 +247,11 @@ function renderDetail(vehicle) {
         </div>
         <div class="field">
           <label for="edit-commission">Komisyon (₺)</label>
-          <input id="edit-commission" type="number" min="0" value="${vehicle.commission || 0}" />
+          <input id="edit-commission" type="number" min="0" step="1" value="${vehicle.commission || 0}" />
         </div>
         <div class="field">
           <label for="edit-vat">KDV (₺)</label>
-          <input id="edit-vat" type="number" min="0" value="${vehicle.vat_amount || 0}" />
+          <input id="edit-vat" type="number" min="0" step="1" value="${vehicle.vat_amount || 0}" />
         </div>
         <div class="field">
           <label for="edit-seller-name">Satıcı adı</label>
@@ -270,7 +270,7 @@ function renderDetail(vehicle) {
         </div>
         <div class="field">
           <label for="edit-sale-price">Satış fiyatı</label>
-          <input id="edit-sale-price" type="number" value="${vehicle.sale_price ?? ""}" />
+          <input id="edit-sale-price" type="number" min="0" step="1" value="${vehicle.sale_price ?? ""}" />
         </div>
         <div class="field">
           <label for="edit-sale-date">Satış tarihi</label>
