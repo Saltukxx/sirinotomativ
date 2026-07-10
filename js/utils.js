@@ -32,6 +32,50 @@ function formatCurrency(amount) {
   }).format(Number(amount) || 0);
 }
 
+/** Telefonda 850.000 / 1.250.000 gibi girişleri sayıya çevirir. */
+function parseMoney(raw) {
+  if (raw == null) return null;
+  const text = String(raw).trim();
+  if (!text) return null;
+
+  let normalized = text.replace(/[₺\s]/g, "").replace(/TL/gi, "");
+
+  const hasComma = normalized.includes(",");
+  const hasDot = normalized.includes(".");
+
+  if (hasComma && hasDot) {
+    // 1.250.000,50 → 1250000.50
+    normalized = normalized.replace(/\./g, "").replace(",", ".");
+  } else if (hasComma) {
+    // 1250000,50 veya 1,250,000
+    const parts = normalized.split(",");
+    if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+      normalized = normalized.replace(/,/g, "");
+    } else {
+      normalized = normalized.replace(",", ".");
+    }
+  } else if (hasDot) {
+    // 1.250.000 veya 1250.5
+    const parts = normalized.split(".");
+    if (parts.length > 2 || (parts.length === 2 && parts[1].length === 3)) {
+      normalized = normalized.replace(/\./g, "");
+    }
+  }
+
+  normalized = normalized.replace(/[^\d.]/g, "");
+  if (!normalized) return null;
+
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
+}
+
+function moneyInputValue(amount) {
+  if (amount == null || amount === "") return "";
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return "";
+  return String(Math.round(n));
+}
+
 function formatPercent(value) {
   return new Intl.NumberFormat("tr-TR", {
     style: "percent",

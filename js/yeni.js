@@ -53,21 +53,21 @@ qs("vehicle-form").addEventListener("submit", async (e) => {
   }
 
   const status = qs("status").value;
-  const salePriceRaw = qs("sale_price").value;
+  const salePrice = parseMoney(qs("sale_price").value);
   const payload = {
     brand: qs("brand").value.trim(),
     model: qs("model").value.trim(),
     year: Number(qs("year").value),
     plate: qs("plate").value.trim().toUpperCase(),
-    purchase_price: Number(qs("purchase_price").value),
+    purchase_price: parseMoney(qs("purchase_price").value),
     purchase_date: qs("purchase_date").value,
     purchase_payment_type: qs("purchase_payment_type").value || "nakit",
-    commission: Number(qs("commission").value) || 0,
-    vat_amount: Number(qs("vat_amount").value) || 0,
+    commission: parseMoney(qs("commission").value) || 0,
+    vat_amount: parseMoney(qs("vat_amount").value) || 0,
     seller_name: qs("seller_name").value.trim(),
     seller_phone: qs("seller_phone").value.trim(),
     status,
-    sale_price: status === "satildi" && salePriceRaw ? Number(salePriceRaw) : null,
+    sale_price: status === "satildi" ? salePrice : null,
     sale_date: status === "satildi" ? qs("sale_date").value || null : null,
     sale_payment_type:
       status === "satildi" ? qs("sale_payment_type").value || null : null,

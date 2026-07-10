@@ -155,7 +155,7 @@ function renderDetail(vehicle) {
         </div>
         <div class="field">
           <label for="exp-amount">Tutar (₺)</label>
-          <input id="exp-amount" type="number" min="1" step="1" required placeholder="0" inputmode="numeric" />
+          <input id="exp-amount" type="text" inputmode="numeric" required placeholder="Örn. 15000" autocomplete="off" />
         </div>
         <div class="field">
           <label for="exp-date">Tarih</label>
@@ -235,7 +235,7 @@ function renderDetail(vehicle) {
         </div>
         <div class="field">
           <label for="edit-purchase-price">Alış fiyatı</label>
-          <input id="edit-purchase-price" type="number" min="1" step="1" value="${vehicle.purchase_price}" required />
+          <input id="edit-purchase-price" type="text" inputmode="numeric" value="${moneyInputValue(vehicle.purchase_price)}" required autocomplete="off" />
         </div>
         <div class="field">
           <label for="edit-purchase-date">Alış tarihi</label>
@@ -247,11 +247,11 @@ function renderDetail(vehicle) {
         </div>
         <div class="field">
           <label for="edit-commission">Komisyon (₺)</label>
-          <input id="edit-commission" type="number" min="0" step="1" value="${vehicle.commission || 0}" />
+          <input id="edit-commission" type="text" inputmode="numeric" value="${moneyInputValue(vehicle.commission || 0)}" autocomplete="off" />
         </div>
         <div class="field">
           <label for="edit-vat">KDV (₺)</label>
-          <input id="edit-vat" type="number" min="0" step="1" value="${vehicle.vat_amount || 0}" />
+          <input id="edit-vat" type="text" inputmode="numeric" value="${moneyInputValue(vehicle.vat_amount || 0)}" autocomplete="off" />
         </div>
         <div class="field">
           <label for="edit-seller-name">Satıcı adı</label>
@@ -270,7 +270,7 @@ function renderDetail(vehicle) {
         </div>
         <div class="field">
           <label for="edit-sale-price">Satış fiyatı</label>
-          <input id="edit-sale-price" type="number" min="0" step="1" value="${vehicle.sale_price ?? ""}" />
+          <input id="edit-sale-price" type="text" inputmode="numeric" value="${moneyInputValue(vehicle.sale_price)}" autocomplete="off" />
         </div>
         <div class="field">
           <label for="edit-sale-date">Satış tarihi</label>
@@ -342,7 +342,7 @@ function bindDetailEvents(vehicle) {
     hide(feedback);
 
     const description = qs("exp-desc").value.trim();
-    const amount = Number(qs("exp-amount").value);
+    const amount = parseMoney(qs("exp-amount").value);
     const date = qs("exp-date").value;
     const category = qs("exp-cat").value;
     const receiptFile = qs("exp-receipt").files?.[0] || null;
@@ -402,21 +402,21 @@ function bindDetailEvents(vehicle) {
     const errorEl = qs("edit-error");
     hide(errorEl);
     const status = qs("edit-status").value;
-    const saleRaw = qs("edit-sale-price").value;
+    const salePrice = parseMoney(qs("edit-sale-price").value);
     const payload = {
       brand: qs("edit-brand").value.trim(),
       model: qs("edit-model").value.trim(),
       year: Number(qs("edit-year").value),
       plate: qs("edit-plate").value.trim().toUpperCase(),
-      purchase_price: Number(qs("edit-purchase-price").value),
+      purchase_price: parseMoney(qs("edit-purchase-price").value),
       purchase_date: qs("edit-purchase-date").value,
       purchase_payment_type: qs("edit-purchase-payment").value || "nakit",
-      commission: Number(qs("edit-commission").value) || 0,
-      vat_amount: Number(qs("edit-vat").value) || 0,
+      commission: parseMoney(qs("edit-commission").value) || 0,
+      vat_amount: parseMoney(qs("edit-vat").value) || 0,
       seller_name: qs("edit-seller-name").value.trim(),
       seller_phone: qs("edit-seller-phone").value.trim(),
       status,
-      sale_price: status === "satildi" && saleRaw ? Number(saleRaw) : null,
+      sale_price: status === "satildi" ? salePrice : null,
       sale_date: status === "satildi" ? qs("edit-sale-date").value || null : null,
       sale_payment_type:
         status === "satildi" ? qs("edit-sale-payment").value || null : null,
@@ -424,6 +424,12 @@ function bindDetailEvents(vehicle) {
       buyer_phone: status === "satildi" ? qs("edit-buyer-phone").value.trim() : "",
       notes: qs("edit-notes").value.trim(),
     };
+
+    if (!(payload.purchase_price > 0)) {
+      errorEl.textContent = "Alış fiyatı 0'dan büyük olmalıdır.";
+      show(errorEl);
+      return;
+    }
 
     if (status === "satildi" && !(payload.sale_price > 0)) {
       errorEl.textContent = "Satılan araç için satış fiyatı girin.";
